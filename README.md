@@ -25,4 +25,15 @@ Home Assistant Switch for 8 Relays
 
 ## Hardware
 
-- todo
+- Break the tab on the sides with brass screws
+- Connect each of the brass screws to Normally Open (N/O) on relay
+
+![plug](https://github.com/debsahu/PCF8574_8Relay/blob/master/doc/plug.png)
+
+- Use PCF8574AP (exact version used here)
+- Use 3.3V to 5V level shifters for ESP8266 I2C data
+- Set A0, A1, A2 to GND so I2C address is 0x20
+- Use 5V as VCC on PCF8574AP
+- Use a good 110V AC to 5V DC device like a phone charger
+
+![schematic](https://github.com/debsahu/PCF8574_8Relay/blob/master/doc/schematic.png)
