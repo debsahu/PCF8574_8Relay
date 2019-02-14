@@ -14,12 +14,14 @@ Home Assistant Switch for 8 Relays
 
 [platformio.ini](https://github.com/debsahu/PCF8574_8Relay/blob/master/platformio.ini) is included, use [PlatformIO](https://platformio.org/platformio-ide) and it will take care of installing the following libraries.
 
-| Library                   | Link                                                                                              |
-|---------------------------|---------------------------------------------------------------------------------------------------|
-|MQTT                       |https://github.com/256dpi/arduino-mqtt                                                             |
-|ArduinoJson v6.8.0         |https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip |
-|WiFiManager Develop        |https://github.com/tzapu/WiFiManager/archive/development.zip                                       |
-|PCF8574 Library            |https://github.com/xreef/PCF8574_library                                                           |
+| Library                     | Link                                                                                              |
+|-----------------------------|---------------------------------------------------------------------------------------------------|
+|MQTT                         |https://github.com/256dpi/arduino-mqtt                                                             |
+|ArduinoJson v6.8.0           |https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip |
+|WiFiManager Develop          |https://github.com/tzapu/WiFiManager/archive/development.zip                                       |
+|PCF8574 Library              |https://github.com/xreef/PCF8574_library                                                           |
+|Arduino WebSockets           |https://github.com/Links2004/arduinoWebSockets                                                     |
+|UpdateUploadServer (ESP8266) |https://github.com/debsahu/DDUpdateUploadServer                                                    |
 
 ## Hardware
 
