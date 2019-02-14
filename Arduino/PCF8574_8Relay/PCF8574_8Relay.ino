@@ -4,22 +4,28 @@
 #ifdef ESP32
 #include <WiFi.h>
 #include <SPIFFS.h>
+#include <WebServer.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #else
 #error "Platform not supported"
 #endif
 #include <EEPROM.h>
 #include <Ticker.h>
 #include <ArduinoOTA.h>
+#include "version.h"
 
 ///////// External Libraries///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <MQTT.h>        //https://github.com/256dpi/arduino-mqtt
-#include <WiFiManager.h> //https://github.com/tzapu/WiFiManager/archive/development.zip
-#include <ArduinoJson.h> //https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip
-#include <PCF8574.h>     //https://github.com/xreef/PCF8574_library/archive/master.zip
-
+#include <MQTT.h>                 //https://github.com/256dpi/arduino-mqtt
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager/archive/development.zip
+#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip
+#include <PCF8574.h>              //https://github.com/xreef/PCF8574_library
+#include <WebSocketsServer.h>     //https://github.com/Links2004/arduinoWebSockets
+#ifdef ESP8266
+#include <DDUpdateUploadServer.h> //https://github.com/debsahu/DDUpdateUploadServer
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //#include "secrets.h" //uncomment to use values in secrets.h
@@ -45,7 +51,13 @@ char mqtt_port[6] = "1883";
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+#ifdef ESP32
+WebServer server(80);
+#else
+ESP8266WebServer server(80);
+DDUpdateUploadServer httpUpdater;
+#endif
+WebSocketsServer webSocket = WebSocketsServer(81);
 WiFiClient net;
 MQTTClient client(512);
 Ticker sendStat;
@@ -64,6 +76,7 @@ char mqtt_client_name[100] = HOSTNAME;
 
 bool shouldSaveConfig = false;
 bool shouldUpdateLights = false;
+bool shouldReboot = false;
 
 void saveConfigCallback()
 {
@@ -237,20 +250,8 @@ String statusMsg(void)
   return msg_str;
 }
 
-void sendMQTTStatusMsg(void)
+void processJson(String &payload)
 {
-  Serial.print(F("Sending ["));
-  Serial.print(light_topic_out);
-  Serial.print(F("] >> "));
-  Serial.println(statusMsg());
-  client.publish(light_topic_out, statusMsg());
-  sendStat.detach();
-}
-
-void messageReceived(String &topic, String &payload)
-{
-  Serial.println("Incoming: [" + topic + "] << " + payload);
-
   /*
   incoming message template:
   {
@@ -290,6 +291,22 @@ void messageReceived(String &topic, String &payload)
       writeEEPROM();
     }
   }
+}
+
+void sendMQTTStatusMsg(void)
+{
+  Serial.print(F("Sending ["));
+  Serial.print(light_topic_out);
+  Serial.print(F("] >> "));
+  Serial.println(statusMsg());
+  client.publish(light_topic_out, statusMsg());
+  sendStat.detach();
+}
+
+void messageReceived(String &topic, String &payload)
+{
+  Serial.println("Incoming: [" + topic + "] << " + payload);
+  processJson(payload);
 }
 
 void sendAutoDiscoverySwitch(String index, String &discovery_topic)
@@ -434,6 +451,52 @@ bool writeConfigFS()
   return true;
 }
 
+// /**********************  WebSocket & WebServer ******************************/
+
+#include "indexhtml.h" //contains gzipped minimized index.html
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
+{
+
+  switch (type)
+  {
+  case WStype_DISCONNECTED:
+    Serial.printf("[%u] Disconnected!\n", num);
+    break;
+  case WStype_CONNECTED:
+  {
+    IPAddress ip = webSocket.remoteIP(num);
+    Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+    Serial.printf("WS [%u] << %s\n", num, payload);
+    webSocket.sendTXT(num, statusMsg().c_str());
+  }
+  break;
+  case WStype_TEXT:
+    Serial.printf("WS [%u] << %s\n", num, payload);
+    String msg = String((char *)payload);
+    processJson(msg);
+    webSocket.sendTXT(num, "OK");
+    break;
+  }
+}
+
+void handleNotFound()
+{
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+}
+
 // /****************************  SETUP  ****************************************/
 
 void setup()
@@ -449,7 +512,7 @@ void setup()
   Serial.println(F("---------------------------"));
   Serial.println(F("Starting SPIFFs"));
 #ifdef ESP32
-  if (SPIFFS.begin(true))
+  if (SPIFFS.begin(true)) //format SPIFFS if needed
 #else
   if (SPIFFS.begin())
 #endif
@@ -466,10 +529,12 @@ void setup()
   WiFi.mode(WIFI_STA); // Make sure you're in station mode
 
 #ifdef ESP32
+  WiFi.setHostname(HOSTNAME);
   snprintf(chipId, sizeof(chipId), "%08x", (uint32_t)ESP.getEfuseMac());
   snprintf(NameChipId, sizeof(NameChipId), "%s_%08x", HOSTNAME, (uint32_t)ESP.getEfuseMac());
   WiFi.setHostname(const_cast<char *>(NameChipId));
 #else
+  WiFi.hostname(HOSTNAME);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   snprintf(chipId, sizeof(chipId), "%06x", ESP.getChipId());
@@ -549,14 +614,48 @@ void setup()
       Serial.println("End Failed");
   });
   ArduinoOTA.begin();
+
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+  Serial.print(F(" HTTP server starting "));
+  server.on("/", HTTP_GET, [&] {
+    server.sendHeader("Content-Encoding", "gzip", true);
+    server.send_P(200, PSTR("text/html"), index_htm_gz, index_htm_gz_len);
+  });
+  server.on("/status", HTTP_GET, [&] {
+    server.send(200, "application/json", statusMsg());
+  });
+  server.on("/version", HTTP_GET, [&] {
+    server.send(200, "application/json", SKETCH_VERSION);
+  });
+  server.on("/restart", HTTP_GET, [&]() {
+    Serial.println(F("/restart"));
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    server.send(200, "text/html", "<META http-equiv='refresh' content='15;URL=/'><body align=center><H4>Restarting...</H4></body>");
+    shouldReboot = true;
+  });
+  server.on("/reset_wifi", HTTP_GET, [&]() {
+    Serial.println(F("/reset_wlan"));
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    server.send(200, "text/html", "<META http-equiv='refresh' content='15;URL=/'><body align=center><H4>Resetting WLAN and restarting...</H4></body>");
+    WiFiManager wm;
+    wm.resetSettings();
+    shouldReboot = true;
+  });
+  #ifdef ESP8266
+  httpUpdater.setup(&server);
+  #endif
+  server.begin();
+  Serial.print(F(" done!\n"));
 }
 
 // /*****************  MAIN LOOP  ****************************************/
 
 void loop()
 {
-
   ArduinoOTA.handle();
+  server.handleClient();
+  webSocket.loop();
 
   if (!client.connected())
     connect_mqtt();
@@ -565,4 +664,11 @@ void loop()
 
   if (shouldUpdateLights)
     setLights();
+
+  if (shouldReboot)
+  {
+    Serial.println(F("Rebooting..."));
+    delay(100);
+    ESP.restart();
+  }
 }

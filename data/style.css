@@ -1,0 +1,123 @@
+/* node-minify --compressor clean-css --input 'style.css' --output 'style.min.css' */
+
+body{
+  text-align: center;
+  color: #fff;
+  background-color: #b9d9fc;
+}
+
+.lightStatus{
+  margin-top: 5px;
+  color: #fff;
+  font-size: 14px;
+  font-family: Verdana;
+}
+
+section {
+  margin: 0;
+  padding: 0;
+  width: 160px;
+  display: inline-block;
+}
+
+input[type=checkbox] {
+  display: block;
+  opacity: 0;
+}
+
+label {
+  width: 60px;
+  height: 30px;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  background: #8a0000;
+  border-radius: 30px;
+  
+  transition: background-color 0.4s;
+  -moz-transition: background-color 0.4s;
+  -webkit-transition: background-color 0.4s;
+}
+
+label:after {
+  left: 0;
+  width: 20px;
+  height: 20px;
+  margin: 5px;
+  content: '';
+  position: absolute;
+  background: #FFF;
+  border-radius: 10px;
+}
+
+input:checked + label {
+  background: #007531;
+}
+
+input:checked + label:after {
+  left: auto;
+  right: 0;
+}
+
+p {
+  font: normal 20px/40px Arial;
+  color: #bdbdbd;
+  display: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.switch {
+  font: normal 20px/40px Arial;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0px;
+}
+
+input:checked ~ p:nth-of-type(1) {
+  color: #007531;
+  display: block;
+}
+
+input:not(:checked) ~ p:nth-of-type(2) {
+  color: #8a0000;
+  display: block;
+}
+
+.wrapper svg {
+  margin: 48px auto;
+}
+
+.wrap {
+  min-height: 10vh;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrap .half {
+  width: 50%;
+  padding: 12px 0;
+  align-items: left;
+  justify-content: left;
+}
+
+.title {
+  font-family: sans-serif;
+  line-height: 24px;
+  display: block;
+  padding: 8px 0;
+}
+
+.onoff {
+  margin: auto;
+  text-align: center;
+  font-family: sans-serif;
+  line-height: 50px;
+  padding: 10px;
+  display: inline-block;
+}
