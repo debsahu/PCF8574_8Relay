@@ -189,7 +189,7 @@ void setLights(uint8_t single_pin = 99)
     end_i = single_pin + 1;
   }
   for (uint8_t i = begin_i; i < end_i; i++)
-    pcf8574.digitalWrite(Light[i].pin, (Light[i].state) ? HIGH : LOW);
+    pcf8574.digitalWrite(Light[i].pin, (Light[i].state) ? LOW : HIGH); // active LOW is relay ON
   writeEEPROM();
   shouldUpdateLights = false;
 }
