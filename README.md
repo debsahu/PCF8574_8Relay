@@ -1,6 +1,6 @@
 # ESP8266/32 (Home Assistant Switch) connected to PCF8574 controlling 8 relays
 
-[![Build Status](https://travis-ci.com/debsahu/PCF8574_8Relay.svg?branch=master)](https://travis-ci.com/debsahu/PCF8574_8Relay) [![License: MIT](https://img.shields.io/github/license/debsahu/PCF8574_8Relay.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/github/release/debsahu/PCF8574_8Relay.svg)](https://github.com/debsahu/PCF8574_8Relay/releases/tag/1.1.2) [![LastCommit](https://img.shields.io/github/last-commit/debsahu/PCF8574_8Relay.svg?style=social)](https://github.com/debsahu/PCF8574_8Relay/commits/master)
+[![Build Status](https://travis-ci.com/debsahu/PCF8574_8Relay.svg?branch=master)](https://travis-ci.com/debsahu/PCF8574_8Relay) [![License: MIT](https://img.shields.io/github/license/debsahu/PCF8574_8Relay.svg)](https://opensource.org/licenses/MIT) [![version](https://img.shields.io/github/release/debsahu/PCF8574_8Relay.svg)](https://github.com/debsahu/PCF8574_8Relay/releases) [![LastCommit](https://img.shields.io/github/last-commit/debsahu/PCF8574_8Relay.svg?style=social)](https://github.com/debsahu/PCF8574_8Relay/commits/master)
 
 Home Assistant Switch for 8 Relays
 
