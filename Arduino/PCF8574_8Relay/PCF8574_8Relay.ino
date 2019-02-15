@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <SPIFFS.h>
 #include <WebServer.h>
+#include <Update.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -32,6 +33,8 @@
 
 #define HOSTNAME "HolidayRelay"
 
+#define MAX_DEVICES 8
+
 #ifndef PIO_PLATFORM
 #ifdef ESP32
 #define SDA_PIN 21 //GPIO21 on ESP32
@@ -53,6 +56,7 @@ char mqtt_port[6] = "1883";
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef ESP32
 WebServer server(80);
+const char* updateIndex = "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
 #else
 ESP8266WebServer server(80);
 DDUpdateUploadServer httpUpdater;
@@ -67,7 +71,7 @@ struct LED_LIGHTS
 {
   uint8_t pin;
   bool state = false;
-} Light[8];
+} Light[MAX_DEVICES];
 
 char light_topic_in[100] = "";
 char light_topic_out[100] = "";
@@ -160,7 +164,7 @@ int eeprom_addr = 0;
 void writeEEPROM(void)
 {
   size_t LED_data_size = sizeof(Light[0]);
-  for (uint8_t i = 0; i < 8; i++)
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
     EEPROM.put(eeprom_addr + 1 + LED_data_size * i, Light[i]);
   EEPROM.commit();
 }
@@ -177,7 +181,7 @@ void readEEPROM(void)
   else
   {
     size_t LED_data_size = sizeof(Light[0]);
-    for (uint8_t i = 0; i < 8; i++)
+    for (uint8_t i = 0; i < MAX_DEVICES; i++)
       EEPROM.get(eeprom_addr + 1 + LED_data_size * i, Light[i]);
   }
 }
@@ -186,7 +190,7 @@ void readEEPROM(void)
 
 void initLights(void)
 {
-  for (uint8_t i = 0; i < 8; i++)
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
   {
     Light[i].pin = i;
     pcf8574.pinMode(Light[i].pin, OUTPUT);
@@ -196,7 +200,7 @@ void initLights(void)
 
 void setLights(uint8_t single_pin = 99)
 {
-  uint8_t begin_i = 0, end_i = 8;
+  uint8_t begin_i = 0, end_i = MAX_DEVICES;
   if (single_pin != 99)
   {
     begin_i = single_pin;
@@ -210,14 +214,14 @@ void setLights(uint8_t single_pin = 99)
 
 void setAllOn(void)
 {
-  for (uint8_t i = 0; i < 8; i++)
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
     Light[i].state = true;
   setLights();
 }
 
 void setAllOff(void)
 {
-  for (uint8_t i = 0; i < 8; i++)
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
     Light[i].state = false;
   setLights();
 }
@@ -240,8 +244,8 @@ String statusMsg(void)
   }
   */
 
-  DynamicJsonDocument json(JSON_OBJECT_SIZE(8) + 100);
-  for (uint8_t i = 0; i < 8; i++)
+  DynamicJsonDocument json(JSON_OBJECT_SIZE(MAX_DEVICES) + 100);
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
   {
     String l_name = "light" + String(i + 1);
     json[l_name] = (Light[i].state) ? "ON" : "OFF";
@@ -274,7 +278,7 @@ void processJson(String &payload)
   {
     uint8_t index = jsonBuffer["light"];
     index--;
-    if (index >= 8)
+    if (index >= MAX_DEVICES)
       return;
     String stateValue = jsonBuffer["state"];
     if (stateValue == "ON" or stateValue == "on")
@@ -360,7 +364,7 @@ void sendAutoDiscoverySwitch(String index, String &discovery_topic)
 
 void sendAutoDiscovery(void)
 {
-  for (uint8_t i = 0; i < 8; i++)
+  for (uint8_t i = 0; i < MAX_DEVICES; i++)
   {
     String dt = "homeassistant/switch/" + String(HOSTNAME) + String(i + 1) + "/config";
     sendAutoDiscoverySwitch(String(i + 1), dt);
@@ -521,8 +525,6 @@ void setup()
 #endif
   {
     listDir(SPIFFS, "/", 0);
-    Serial.println(F("SPIFFs started"));
-    Serial.println(F("---------------------------"));
   }
 
   if (readConfigFS())
@@ -645,7 +647,37 @@ void setup()
     wm.resetSettings();
     shouldReboot = true;
   });
-  #ifdef ESP8266
+  #ifdef ESP32
+  server.on("/update", HTTP_GET, []() {
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/html", updateIndex);
+  });
+  server.on("/update", HTTP_POST, []() {
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/plain", (Update.hasError()) ? "<META http-equiv='refresh' content='15;URL=/'><body align=center><H4>Update: FAILED, refreshing in 15s.</H4></body>": "<META http-equiv='refresh' content='15;URL=/'><body align=center><H4>Update: OK, refreshing in 15s.</H4></body>");
+      shouldReboot = true;
+    }, []() {
+      HTTPUpload& upload = server.upload();
+      if (upload.status == UPLOAD_FILE_START) {
+        Serial.setDebugOutput(true);
+        Serial.printf("Update: %s\n", upload.filename.c_str());
+        if (!Update.begin()) { //start with max available size
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) { //true to set the size to the current progress
+          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else {
+          Update.printError(Serial);
+        }
+        Serial.setDebugOutput(false);
+      }
+  });
+  #else
   httpUpdater.setup(&server);
   #endif
   server.begin();
