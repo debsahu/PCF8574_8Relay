@@ -30,7 +30,7 @@
 
 //#include "secrets.h" //uncomment to use values in secrets.h
 
-#define HOSTNAME "Holiday Relay"
+#define HOSTNAME "HolidayRelay"
 
 #ifndef PIO_PLATFORM
 #ifdef ESP32
@@ -172,6 +172,7 @@ void readEEPROM(void)
   {
     EEPROM.write(eeprom_addr, 'w');
     writeEEPROM();
+    shouldSaveConfig = true;
   }
   else
   {
@@ -653,17 +654,12 @@ void setup()
 
 void loop()
 {
+  if (shouldUpdateLights)
+    setLights();
+
   ArduinoOTA.handle();
   server.handleClient();
   webSocket.loop();
-
-  if (!client.connected())
-    connect_mqtt();
-  else
-    client.loop();
-
-  if (shouldUpdateLights)
-    setLights();
 
   if (shouldReboot)
   {
@@ -671,4 +667,9 @@ void loop()
     delay(100);
     ESP.restart();
   }
+
+  if (!client.connected())
+    connect_mqtt();
+  else
+    client.loop();
 }
