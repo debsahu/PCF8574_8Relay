@@ -282,14 +282,16 @@ void processJson(String &payload)
       Light[index].state = true;
       shouldUpdateLights = true;
       sendMQTTStatusMsg();
-      writeEEPROM();
+      webSocket.broadcastTXT(statusMsg().c_str());
+      //writeEEPROM();
     }
     else if (stateValue == "OFF" or stateValue == "off")
     {
       Light[index].state = false;
       shouldUpdateLights = true;
       sendMQTTStatusMsg();
-      writeEEPROM();
+      webSocket.broadcastTXT(statusMsg().c_str());
+      //writeEEPROM();
     }
   }
 }
