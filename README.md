@@ -8,7 +8,7 @@ Home Assistant Switch for 8 Relays
 - PCF8574 can be used to extend the GPIO of ESP8266/32
 - 8 ports of PCF8574 is connected to 8 Relay module
 
-[![PCF8574_8Relay](https://img.youtube.com/vi/XXXXXXXX/0.jpg)](https://www.youtube.com/watch?v=XXXXXXXX)
+[![PCF8574_8Relay](https://img.youtube.com/vi/6CzkeJei5i0/0.jpg)](https://www.youtube.com/watch?v=6CzkeJei5i0)
 
 ## Libraries Needed
 
