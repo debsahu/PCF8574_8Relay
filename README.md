@@ -17,7 +17,7 @@ Home Assistant Switch for 4 Relays
 | Library                     | Link                                                                                              |
 |-----------------------------|---------------------------------------------------------------------------------------------------|
 |MQTT                         |https://github.com/256dpi/arduino-mqtt                                                             |
-|ArduinoJson v6.8.0           |https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip |
+|ArduinoJson v6               |https://github.com/bblanchon/ArduinoJson                                                           |
 |WiFiManager Develop          |https://github.com/tzapu/WiFiManager/archive/development.zip                                       |
 |Arduino WebSockets           |https://github.com/Links2004/arduinoWebSockets                                                     |
 |UpdateUploadServer (ESP8266) |https://github.com/debsahu/DDUpdateUploadServer                                                    |
@@ -44,4 +44,4 @@ Home Assistant Switch for 4 Relays
 - Use 3.3V to 5V level shifters for ESP8266 I2C data
 - Use a good 110V AC to 5V DC device like a phone charger
 
-![schematic](https://github.com/debsahu/PCF8574_8Relay/blob/master/doc/schematic.png)
+![schematic](https://github.com/debsahu/PCF8574_8Relay/blob/direct_4Relay/doc/schematic.png)
