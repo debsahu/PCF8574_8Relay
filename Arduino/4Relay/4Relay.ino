@@ -21,8 +21,7 @@
 
 #include <MQTT.h>                 //https://github.com/256dpi/arduino-mqtt
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager/archive/development.zip
-#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson/releases/download/v6.8.0-beta/ArduinoJson-v6.8.0-beta.zip
-#include <PCF8574.h>              //https://github.com/xreef/PCF8574_library
+#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
 #include <WebSocketsServer.h>     //https://github.com/Links2004/arduinoWebSockets
 #ifdef ESP8266
 #include <DDUpdateUploadServer.h> //https://github.com/debsahu/DDUpdateUploadServer
@@ -33,18 +32,23 @@
 
 #define HOSTNAME "HolidayRelay"
 
-#define MAX_DEVICES 8
+#define MAX_DEVICES 4
 
 #ifndef PIO_PLATFORM
 #ifdef ESP32
-#define SDA_PIN 21 //GPIO21 on ESP32
-#define SCL_PIN 22 //GPIO22 on ESP32
+#define ACTL_PIN1 21 //GPIO21 on ESP32
+#define ACTL_PIN2 22 //GPIO22 on ESP32
+#define ACTL_PIN3 23 //GPIO23 on ESP32
+#define ACTL_PIN4 25 //GPIO25 on ESP32
 #else
-#define SDA_PIN 4 //D2 on NodeMCU
-#define SCL_PIN 5 //D1 on NodeMCU
+#define ACTL_PIN1 5  //D1 on NodeMCU
+#define ACTL_PIN2 4  //D2 on NodeMCU
+#define ACTL_PIN3 14 //D5 on NodeMCU
+#define ACTL_PIN4 12 //D6 on NodeMCU
 #endif
 #endif
-#define PCF8574_ADDRESS 0x20
+
+uint8_t light_pin[MAX_DEVICES] = {ACTL_PIN1, ACTL_PIN2, ACTL_PIN3, ACTL_PIN4};
 
 #ifndef SECRET
 char mqtt_server[40] = "192.168.0.xxx";
@@ -65,7 +69,6 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 WiFiClient net;
 MQTTClient client(512);
 Ticker sendStat;
-PCF8574 pcf8574(PCF8574_ADDRESS, SDA_PIN, SCL_PIN);
 
 struct LED_LIGHTS
 {
@@ -192,10 +195,9 @@ void initLights(void)
 {
   for (uint8_t i = 0; i < MAX_DEVICES; i++)
   {
-    Light[i].pin = i;
-    pcf8574.pinMode(Light[i].pin, OUTPUT);
+    Light[i].pin = light_pin[i];
+    pinMode(Light[i].pin, OUTPUT);
   }
-  pcf8574.begin();
 }
 
 void setLights(uint8_t single_pin = 99)
@@ -207,7 +209,7 @@ void setLights(uint8_t single_pin = 99)
     end_i = single_pin + 1;
   }
   for (uint8_t i = begin_i; i < end_i; i++)
-    pcf8574.digitalWrite(Light[i].pin, (Light[i].state) ? LOW : HIGH); // active LOW is relay ON
+    digitalWrite(Light[i].pin, (Light[i].state) ? LOW : HIGH); // active LOW is relay ON
   writeEEPROM();
   shouldUpdateLights = false;
 }
@@ -236,11 +238,7 @@ String statusMsg(void)
     "light1":"OFF",
     "light2":"OFF",
     "light3":"OFF",
-    "light4":"OFF",
-    "light5":"OFF",
-    "light6":"OFF",
-    "light7":"OFF",
-    "light8":"OFF"
+    "light4":"OFF"
   }
   */
 
