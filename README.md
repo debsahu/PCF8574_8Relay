@@ -27,8 +27,8 @@ Home Assistant Switch for 8 Relays
 
 ### Items
 
-1. ESP8266 ([aliexpress](https://www.aliexpress.com/item/ESP8266-CH340G-CH340-G-NodeMcu-V3-Lua-Wireless-WIFI-Module-Micro-USB-Connector-Development-Board-CP2102/32965931916.html)) / ESP32 ([aliexpress]())
-2. 3.3V to 5V converter ([aliexpress](https://www.aliexpress.com/item/WEMOS-LOLIN32-V1-0-0-wifi-bluetooth-board-based-ESP-32-4MB-FLASH/32808551116.html))
+1. ESP8266 ([aliexpress](https://www.aliexpress.com/item/ESP8266-CH340G-CH340-G-NodeMcu-V3-Lua-Wireless-WIFI-Module-Micro-USB-Connector-Development-Board-CP2102/32965931916.html)) / ESP32 ([aliexpress](https://www.aliexpress.com/item/WEMOS-LOLIN32-V1-0-0-wifi-bluetooth-board-based-ESP-32-4MB-FLASH/32808551116.html))
+2. 3.3V to 5V converter ([aliexpress](https://www.aliexpress.com/item/1972789887.html))
 3. PCF8574AP ([aliexpress](https://www.aliexpress.com/item/5PCS-PCF8574P-DIP16-PCF8574-DIP-new-and-original-IC-free-shipping/32551167706.html))
 4. 8-port relay ([aliexpress](https://www.aliexpress.com/item/4-channel-relay-module-optocoupler-isolation-four-relay-module-control-panel/1499329187.html?spm=2114.search0104.3.119.659b241dK9vXAs&ws_ab_test=searchweb0_0,searchweb201602_3_10065_10130_10068_10890_10547_319_10546_317_10548_10545_10696_453_10084_454_10083_10618_10307_537_536_10902_10059_10884_10887_321_322_10103-10890,searchweb201603_59,ppcSwitch_0&algo_expid=073750a0-a3ec-413e-81fb-86ecf3b66fe4-15&algo_pvid=073750a0-a3ec-413e-81fb-86ecf3b66fe4&transAbTest=ae803_4))
 5. Plastic Box ([amazon](https://www.amazon.com/Hammond-1591ESBK-ABS-Project-Black/dp/B0002BSRIO/))
